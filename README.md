@@ -10,8 +10,10 @@ Video compression benefits from advanced chroma intra prediction methods, such a
 ## Proposed method
 
 Building upon the attention-based neural network in [this paper](https://ieeexplore.ieee.org/document/9292660), two schemes for spatial information refinement are proposed to improve the chroma prediction performance. By adding down-sampling branches or location information to the input, the network performance is improved as more accurate prediction values can be obtained. Without changing the main structure, the two proposed schemes enhance the cross-component boundary branch and the luma convolutional branch. The proposed two schemes are:
-⚫ Scheme A: Adding down-sample branch.
-⚫ Scheme B: Adding location map 
+
+**Scheme A**: Adding down-sample branch.
+
+**Scheme B**: Adding location map 
 
 ## Publication
 
