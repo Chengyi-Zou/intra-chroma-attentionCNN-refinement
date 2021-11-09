@@ -1,41 +1,37 @@
-From f801da6561f6f717710608690594965a1b036698 Mon Sep 17 00:00:00 2001
-From: Chengyi-Zou <965737998@qq.com>
-Date: Mon, 27 Sep 2021 20:13:16 +0800
+From f7dae32b0c296caea10377bbde086c64e8b98e85 Mon Sep 17 00:00:00 2001
+From: JTN <hjhyxq2014@163.com>
+Date: Tue, 9 Nov 2021 11:23:43 +0800
 Subject: [PATCH] new
 
 ---
- source/Lib/CommonLib/CommonDef.h              |   7 +
- source/Lib/CommonLib/Contexts.cpp             |  10 +
- source/Lib/CommonLib/Contexts.h               |   3 +
- source/Lib/CommonLib/IntraPrediction.cpp      | 151 +++++
- source/Lib/CommonLib/IntraPrediction.h        |  13 +
- .../Lib/CommonLib/NNIntraChromaPrediction.cpp | 586 ++++++++++++++++++
- .../Lib/CommonLib/NNIntraChromaPrediction.h   | 452 ++++++++++++++
+ Lib/CommonLib/CommonDef.h                     |   7 +
+ Lib/CommonLib/Contexts.cpp                    |  10 +
+ Lib/CommonLib/Contexts.h                      |   3 +
+ Lib/CommonLib/IntraPrediction.cpp             | 151 +++++
+ Lib/CommonLib/IntraPrediction.h               |  13 +
+ Lib/CommonLib/NNIntraChromaPrediction.cpp     | 586 ++++++++++++++++++
+ Lib/CommonLib/NNIntraChromaPrediction.h       | 452 ++++++++++++++
  .../NNIntraChromaPredictionOrigin.cpp         | 455 ++++++++++++++
- .../CommonLib/NNIntraChromaPredictionOrigin.h | 343 ++++++++++
- source/Lib/CommonLib/Picture.cpp              |   2 +-
- source/Lib/CommonLib/Picture.h                |  14 +-
- source/Lib/CommonLib/TypeDef.h                |   6 +
- source/Lib/CommonLib/UnitTools.cpp            |  26 +
- source/Lib/CommonLib/UnitTools.h              |   3 +
- source/Lib/DecoderLib/CABACReader.cpp         |  51 ++
- source/Lib/DecoderLib/DecCu.cpp               |  20 +-
- source/Lib/DecoderLib/DecLib.cpp              |   5 -
- source/Lib/EncoderLib/CABACWriter.cpp         |  57 ++
- source/Lib/EncoderLib/EncLib.cpp              |  14 -
- source/Lib/EncoderLib/EncModeCtrl.cpp         |  17 +
- source/Lib/EncoderLib/EncSlice.cpp            |   3 +-
- source/Lib/EncoderLib/IntraSearch.cpp         | 141 ++++-
- 22 files changed, 2320 insertions(+), 59 deletions(-)
- create mode 100644 source/Lib/CommonLib/NNIntraChromaPrediction.cpp
- create mode 100644 source/Lib/CommonLib/NNIntraChromaPrediction.h
- create mode 100644 source/Lib/CommonLib/NNIntraChromaPredictionOrigin.cpp
- create mode 100644 source/Lib/CommonLib/NNIntraChromaPredictionOrigin.h
+ Lib/CommonLib/NNIntraChromaPredictionOrigin.h | 343 ++++++++++
+ Lib/CommonLib/TypeDef.h                       |   6 +
+ Lib/CommonLib/UnitTools.cpp                   |  26 +
+ Lib/CommonLib/UnitTools.h                     |   3 +
+ Lib/DecoderLib/CABACReader.cpp                |  51 ++
+ Lib/DecoderLib/DecCu.cpp                      |  20 +-
+ Lib/EncoderLib/CABACWriter.cpp                |  57 ++
+ Lib/EncoderLib/EncModeCtrl.cpp                |  17 +
+ Lib/EncoderLib/EncSlice.cpp                   |   3 +-
+ Lib/EncoderLib/IntraSearch.cpp                | 141 ++++-
+ 18 files changed, 2314 insertions(+), 30 deletions(-)
+ create mode 100644 Lib/CommonLib/NNIntraChromaPrediction.cpp
+ create mode 100644 Lib/CommonLib/NNIntraChromaPrediction.h
+ create mode 100644 Lib/CommonLib/NNIntraChromaPredictionOrigin.cpp
+ create mode 100644 Lib/CommonLib/NNIntraChromaPredictionOrigin.h
 
-diff --git a/source/Lib/CommonLib/CommonDef.h b/source/Lib/CommonLib/CommonDef.h
+diff --git a/Lib/CommonLib/CommonDef.h b/Lib/CommonLib/CommonDef.h
 index 1732b46..9ed589e 100644
---- a/source/Lib/CommonLib/CommonDef.h
-+++ b/source/Lib/CommonLib/CommonDef.h
+--- a/Lib/CommonLib/CommonDef.h
++++ b/Lib/CommonLib/CommonDef.h
 @@ -232,7 +232,11 @@ static const int MULTI_REF_LINE_IDX[4] =               { 0, 1, 3, 0 };
  static const int PRED_REG_MIN_WIDTH =                               4;  // Minimum prediction region width for ISP subblocks
  
@@ -58,10 +54,10 @@ index 1732b46..9ed589e 100644
  static const int DM_CHROMA_IDX =                       NUM_INTRA_MODE; ///< chroma mode index for derived from luma intra mode
  
  static const uint32_t  NUM_TRAFO_MODES_MTS =                            6; ///< Max Intra CU size applying EMT, supported values: 8, 16, 32, 64, 128
-diff --git a/source/Lib/CommonLib/Contexts.cpp b/source/Lib/CommonLib/Contexts.cpp
+diff --git a/Lib/CommonLib/Contexts.cpp b/Lib/CommonLib/Contexts.cpp
 index 3280c08..729e677 100644
---- a/source/Lib/CommonLib/Contexts.cpp
-+++ b/source/Lib/CommonLib/Contexts.cpp
+--- a/Lib/CommonLib/Contexts.cpp
++++ b/Lib/CommonLib/Contexts.cpp
 @@ -322,6 +322,16 @@ const CtxSet ContextSetCfg::CclmModeFlag = ContextSetCfg::addCtxSet
    {   4, },
  });
@@ -79,10 +75,10 @@ index 3280c08..729e677 100644
  #if JVET_P0615_CHROMAMODE_CLEANUP
  const CtxSet ContextSetCfg::CclmModeIdx = ContextSetCfg::addCtxSet
  ({
-diff --git a/source/Lib/CommonLib/Contexts.h b/source/Lib/CommonLib/Contexts.h
+diff --git a/Lib/CommonLib/Contexts.h b/Lib/CommonLib/Contexts.h
 index 519f6ac..a905886 100644
---- a/source/Lib/CommonLib/Contexts.h
-+++ b/source/Lib/CommonLib/Contexts.h
+--- a/Lib/CommonLib/Contexts.h
++++ b/Lib/CommonLib/Contexts.h
 @@ -208,6 +208,9 @@ public:
    static const CtxSet   IntraLumaMpmFlag;
    static const CtxSet   IntraLumaPlanarFlag;
@@ -93,10 +89,10 @@ index 519f6ac..a905886 100644
  #if JVET_P0615_CHROMAMODE_CLEANUP
    static const CtxSet   CclmModeIdx;
  #endif
-diff --git a/source/Lib/CommonLib/IntraPrediction.cpp b/source/Lib/CommonLib/IntraPrediction.cpp
+diff --git a/Lib/CommonLib/IntraPrediction.cpp b/Lib/CommonLib/IntraPrediction.cpp
 index ad24b54..5e0b7bd 100644
---- a/source/Lib/CommonLib/IntraPrediction.cpp
-+++ b/source/Lib/CommonLib/IntraPrediction.cpp
+--- a/Lib/CommonLib/IntraPrediction.cpp
++++ b/Lib/CommonLib/IntraPrediction.cpp
 @@ -1417,7 +1417,19 @@ void IntraPrediction::xGetLumaRecPixels(const PredictionUnit &pu, CompArea chrom
    int iDstStride = 0;
    Pel* pDst0 = 0;
@@ -286,10 +282,10 @@ index ad24b54..5e0b7bd 100644
  #if !JVET_P0077_LINE_CG_PALETTE
  bool IntraPrediction::calCopyRun(CodingStructure &cs, Partitioner& partitioner, uint32_t startPos, uint32_t total, uint32_t &run, ComponentID compBegin)
  {
-diff --git a/source/Lib/CommonLib/IntraPrediction.h b/source/Lib/CommonLib/IntraPrediction.h
+diff --git a/Lib/CommonLib/IntraPrediction.h b/Lib/CommonLib/IntraPrediction.h
 index d96b8f0..bd759c6 100644
---- a/source/Lib/CommonLib/IntraPrediction.h
-+++ b/source/Lib/CommonLib/IntraPrediction.h
+--- a/Lib/CommonLib/IntraPrediction.h
++++ b/Lib/CommonLib/IntraPrediction.h
 @@ -45,6 +45,8 @@
  #include "Picture.h"
  
@@ -324,11 +320,11 @@ index d96b8f0..bd759c6 100644
  };
  
  //! \}
-diff --git a/source/Lib/CommonLib/NNIntraChromaPrediction.cpp b/source/Lib/CommonLib/NNIntraChromaPrediction.cpp
+diff --git a/Lib/CommonLib/NNIntraChromaPrediction.cpp b/Lib/CommonLib/NNIntraChromaPrediction.cpp
 new file mode 100644
 index 0000000..f03b9c2
 --- /dev/null
-+++ b/source/Lib/CommonLib/NNIntraChromaPrediction.cpp
++++ b/Lib/CommonLib/NNIntraChromaPrediction.cpp
 @@ -0,0 +1,586 @@
 +/*
 +* Copyright 2021 BBC Research & Development
@@ -916,11 +912,11 @@ index 0000000..f03b9c2
 +  m_attx1Size = Size(32, blockSize);
 +  m_attMapSize = Size(boundarySize, blockSize);
 +}
-diff --git a/source/Lib/CommonLib/NNIntraChromaPrediction.h b/source/Lib/CommonLib/NNIntraChromaPrediction.h
+diff --git a/Lib/CommonLib/NNIntraChromaPrediction.h b/Lib/CommonLib/NNIntraChromaPrediction.h
 new file mode 100644
 index 0000000..a017d96
 --- /dev/null
-+++ b/source/Lib/CommonLib/NNIntraChromaPrediction.h
++++ b/Lib/CommonLib/NNIntraChromaPrediction.h
 @@ -0,0 +1,452 @@
 +/*
 +* Copyright 2021 BBC Research & Development
@@ -1374,11 +1370,11 @@ index 0000000..a017d96
 +};
 +
 +#endif
-diff --git a/source/Lib/CommonLib/NNIntraChromaPredictionOrigin.cpp b/source/Lib/CommonLib/NNIntraChromaPredictionOrigin.cpp
+diff --git a/Lib/CommonLib/NNIntraChromaPredictionOrigin.cpp b/Lib/CommonLib/NNIntraChromaPredictionOrigin.cpp
 new file mode 100644
 index 0000000..e55512f
 --- /dev/null
-+++ b/source/Lib/CommonLib/NNIntraChromaPredictionOrigin.cpp
++++ b/Lib/CommonLib/NNIntraChromaPredictionOrigin.cpp
 @@ -0,0 +1,455 @@
 +/* The copyright in this software is being made available under the BSD
 +* License, included below. This software may be subject to other third party
@@ -1835,11 +1831,11 @@ index 0000000..e55512f
 +  m_attx1Size = Size(32, blockSize);
 +  m_attMapSize = Size(boundarySize, blockSize);
 +}
-diff --git a/source/Lib/CommonLib/NNIntraChromaPredictionOrigin.h b/source/Lib/CommonLib/NNIntraChromaPredictionOrigin.h
+diff --git a/Lib/CommonLib/NNIntraChromaPredictionOrigin.h b/Lib/CommonLib/NNIntraChromaPredictionOrigin.h
 new file mode 100644
 index 0000000..e3102c0
 --- /dev/null
-+++ b/source/Lib/CommonLib/NNIntraChromaPredictionOrigin.h
++++ b/Lib/CommonLib/NNIntraChromaPredictionOrigin.h
 @@ -0,0 +1,343 @@
 +﻿/* The copyright in this software is being made available under the BSD
 +* License, included below. This software may be subject to other third party
@@ -2184,59 +2180,10 @@ index 0000000..e3102c0
 +};
 +
 +#endif
-diff --git a/source/Lib/CommonLib/Picture.cpp b/source/Lib/CommonLib/Picture.cpp
-index 27145dd..b722229 100644
---- a/source/Lib/CommonLib/Picture.cpp
-+++ b/source/Lib/CommonLib/Picture.cpp
-@@ -980,8 +980,8 @@ void Picture::finalInit( const SPS& sps, const PPS& pps, APS** alfApss, APS* lmc
-   memcpy(cs->alfApss, alfApss, sizeof(cs->alfApss));
-   cs->lmcsAps = lmcsAps;
-   cs->scalinglistAps = scalingListAps;
--
-   cs->pcv     = pps.pcv;
-+  m_conformanceWindow = pps.getConformanceWindow();
- 
-   brickMap = new BrickMap;
-   brickMap->create( sps, pps );
-diff --git a/source/Lib/CommonLib/Picture.h b/source/Lib/CommonLib/Picture.h
-index e352118..3f96666 100644
---- a/source/Lib/CommonLib/Picture.h
-+++ b/source/Lib/CommonLib/Picture.h
-@@ -257,6 +257,9 @@ struct Picture : public UnitArea
- 
-   static void   rescalePicture(const CPelUnitBuf& beforeScaling, const Window& confBefore, const PelUnitBuf& afterScaling, const Window& confAfter, const ChromaFormat chromaFormatIDC, const BitDepths& bitDepths, const bool useLumaFilter, const bool downsampling = false);
- 
-+private:
-+  Window        m_conformanceWindow;
-+
- public:
-   bool m_bIsBorderExtended;
-   bool referenced;
-@@ -296,18 +299,11 @@ public:
-   std::deque<Slice*> slices;
-   SEIMessages        SEIs;
- 
--  uint32_t           m_picWidthInLumaSamples;
--  uint32_t           m_picHeightInLumaSamples;
--  Window             m_conformanceWindow;
--
--  void               setPicWidthInLumaSamples( uint32_t u )                          { m_picWidthInLumaSamples = u; }
--  uint32_t           getPicWidthInLumaSamples() const                                { return  m_picWidthInLumaSamples; }
--  void               setPicHeightInLumaSamples( uint32_t u )                         { m_picHeightInLumaSamples = u; }
--  uint32_t           getPicHeightInLumaSamples() const                               { return  m_picHeightInLumaSamples; }
-+  uint32_t           getPicWidthInLumaSamples() const                                { return  getRecoBuf( COMPONENT_Y ).width; }
-+  uint32_t           getPicHeightInLumaSamples() const                               { return  getRecoBuf( COMPONENT_Y ).height; }
- 
-   Window&            getConformanceWindow()                                          { return  m_conformanceWindow; }
-   const Window&      getConformanceWindow() const                                    { return  m_conformanceWindow; }
--  void               setConformanceWindow( Window& conformanceWindow )               { m_conformanceWindow = conformanceWindow; }
- 
-   void         allocateNewSlice();
-   Slice        *swapSliceObject(Slice * p, uint32_t i);
-diff --git a/source/Lib/CommonLib/TypeDef.h b/source/Lib/CommonLib/TypeDef.h
+diff --git a/Lib/CommonLib/TypeDef.h b/Lib/CommonLib/TypeDef.h
 index 1363c31..c5ba6bb 100644
---- a/source/Lib/CommonLib/TypeDef.h
-+++ b/source/Lib/CommonLib/TypeDef.h
+--- a/Lib/CommonLib/TypeDef.h
++++ b/Lib/CommonLib/TypeDef.h
 @@ -50,6 +50,12 @@
  #include <assert.h>
  #include <cassert>
@@ -2250,10 +2197,10 @@ index 1363c31..c5ba6bb 100644
  #define RETRAIN_CABAC                                     1 // Retrained CABAC probabilities
  
  #define JVET_P01034_PRED_1D_SCALING_LIST                  1 // JVET-P1034: 1D Scaling list index and add predictor mode
-diff --git a/source/Lib/CommonLib/UnitTools.cpp b/source/Lib/CommonLib/UnitTools.cpp
+diff --git a/Lib/CommonLib/UnitTools.cpp b/Lib/CommonLib/UnitTools.cpp
 index 2e198dc..b7d6f32 100644
---- a/source/Lib/CommonLib/UnitTools.cpp
-+++ b/source/Lib/CommonLib/UnitTools.cpp
+--- a/Lib/CommonLib/UnitTools.cpp
++++ b/Lib/CommonLib/UnitTools.cpp
 @@ -550,7 +550,12 @@ void PU::getIntraChromaCandModes( const PredictionUnit &pu, unsigned modeList[NU
      modeList[4] = LM_CHROMA_IDX;
      modeList[5] = MDLM_L_IDX;
@@ -2305,10 +2252,10 @@ index 2e198dc..b7d6f32 100644
    modeList[idx++] = MDLM_L_IDX;
    modeList[idx++] = MDLM_T_IDX;
    return idx;
-diff --git a/source/Lib/CommonLib/UnitTools.h b/source/Lib/CommonLib/UnitTools.h
+diff --git a/Lib/CommonLib/UnitTools.h b/Lib/CommonLib/UnitTools.h
 index c40064f..9a2209b 100644
---- a/source/Lib/CommonLib/UnitTools.h
-+++ b/source/Lib/CommonLib/UnitTools.h
+--- a/Lib/CommonLib/UnitTools.h
++++ b/Lib/CommonLib/UnitTools.h
 @@ -185,6 +185,9 @@ namespace PU
  
    bool isLMCMode                      (                          unsigned mode);
@@ -2319,10 +2266,10 @@ index c40064f..9a2209b 100644
    bool isChromaIntraModeCrossCheckMode(const PredictionUnit &pu);
    void getTriangleMergeCandidates     (const PredictionUnit &pu, MergeCtx &triangleMrgCtx);
    void spanTriangleMotionInfo         (      PredictionUnit &pu, MergeCtx &triangleMrgCtx, const bool splitDir, const uint8_t candIdx0, const uint8_t candIdx1);
-diff --git a/source/Lib/DecoderLib/CABACReader.cpp b/source/Lib/DecoderLib/CABACReader.cpp
+diff --git a/Lib/DecoderLib/CABACReader.cpp b/Lib/DecoderLib/CABACReader.cpp
 index 0f7937f..0ffeda3 100644
---- a/source/Lib/DecoderLib/CABACReader.cpp
-+++ b/source/Lib/DecoderLib/CABACReader.cpp
+--- a/Lib/DecoderLib/CABACReader.cpp
++++ b/Lib/DecoderLib/CABACReader.cpp
 @@ -1478,6 +1478,24 @@ bool CABACReader::intra_chroma_lmc_mode(PredictionUnit& pu)
    int lmModeList[10];
    PU::getLMSymbolList(pu, lmModeList);
@@ -2397,10 +2344,10 @@ index 0f7937f..0ffeda3 100644
    if (pu.cs->sps->getUseLMChroma() && pu.cu->checkCCLMAllowed())
    {
      bool isLMCMode = m_BinDecoder.decodeBin(Ctx::CclmModeFlag(0)) ? true : false;
-diff --git a/source/Lib/DecoderLib/DecCu.cpp b/source/Lib/DecoderLib/DecCu.cpp
+diff --git a/Lib/DecoderLib/DecCu.cpp b/Lib/DecoderLib/DecCu.cpp
 index f56cb73..2f8e1db 100644
---- a/source/Lib/DecoderLib/DecCu.cpp
-+++ b/source/Lib/DecoderLib/DecCu.cpp
+--- a/Lib/DecoderLib/DecCu.cpp
++++ b/Lib/DecoderLib/DecCu.cpp
 @@ -235,7 +235,25 @@ void DecCu::xIntraRecBlk( TransformUnit& tu, const ComponentID compID )
    {
      const PredictionUnit& pu = *tu.cu->firstPU;
@@ -2428,26 +2375,10 @@ index f56cb73..2f8e1db 100644
    }
    else
    {
-diff --git a/source/Lib/DecoderLib/DecLib.cpp b/source/Lib/DecoderLib/DecLib.cpp
-index 9d6e2f8..8f99d25 100644
---- a/source/Lib/DecoderLib/DecLib.cpp
-+++ b/source/Lib/DecoderLib/DecLib.cpp
-@@ -929,11 +929,6 @@ void DecLib::xActivateParameterSets()
-     m_pcPic->cs->sps   = sps;
-     m_pcPic->cs->pps   = pps;
- 
--    Window confWin = pps->getConformanceWindow( );
--    m_pcPic->setPicWidthInLumaSamples( pps->getPicWidthInLumaSamples() );
--    m_pcPic->setPicHeightInLumaSamples( pps->getPicHeightInLumaSamples() );
--    m_pcPic->setConformanceWindow( confWin );
--
-     memcpy(m_pcPic->cs->alfApss, apss, sizeof(m_pcPic->cs->alfApss));
-     m_pcPic->cs->lmcsAps = lmcsAPS;
-     m_pcPic->cs->scalinglistAps = scalinglistAPS;
-diff --git a/source/Lib/EncoderLib/CABACWriter.cpp b/source/Lib/EncoderLib/CABACWriter.cpp
+diff --git a/Lib/EncoderLib/CABACWriter.cpp b/Lib/EncoderLib/CABACWriter.cpp
 index 7c33444..1e0d0de 100644
---- a/source/Lib/EncoderLib/CABACWriter.cpp
-+++ b/source/Lib/EncoderLib/CABACWriter.cpp
+--- a/Lib/EncoderLib/CABACWriter.cpp
++++ b/Lib/EncoderLib/CABACWriter.cpp
 @@ -1222,6 +1222,26 @@ void CABACWriter::intra_chroma_lmc_mode(const PredictionUnit& pu)
        break;
      }
@@ -2533,49 +2464,10 @@ index 7c33444..1e0d0de 100644
      {
        intra_chroma_lmc_mode(pu);
        return;
-diff --git a/source/Lib/EncoderLib/EncLib.cpp b/source/Lib/EncoderLib/EncLib.cpp
-index 74a70d5..a469d43 100644
---- a/source/Lib/EncoderLib/EncLib.cpp
-+++ b/source/Lib/EncoderLib/EncLib.cpp
-@@ -571,11 +571,6 @@ void EncLib::encode( bool flush, PelStorage* pcPicYuvOrg, PelStorage* cPicYuvTru
-     const PPS *pps = m_ppsMap.getPS(2);
-     const SPS *sps = m_spsMap.getPS(pps->getSPSId());
- 
--    Window confWin = pps->getConformanceWindow( );
--    picCurr->setPicWidthInLumaSamples( pps->getPicWidthInLumaSamples() );
--    picCurr->setPicHeightInLumaSamples( pps->getPicHeightInLumaSamples() );
--    picCurr->setConformanceWindow( confWin );
--
-     picCurr->M_BUFS(0, PIC_ORIGINAL).copyFrom(m_cGOPEncoder.getPicBg()->getRecoBuf());
-     picCurr->finalInit( *sps, *pps, m_apss, m_lmcsAPS, m_scalinglistAPS );
-     picCurr->poc = m_iPOCLast - 1;
-@@ -637,11 +632,6 @@ void EncLib::encode( bool flush, PelStorage* pcPicYuvOrg, PelStorage* cPicYuvTru
-       const PPS *pPPS=(ppsID<0) ? m_ppsMap.getFirstPS() : m_ppsMap.getPS(ppsID);
-       const SPS *pSPS=m_spsMap.getPS(pPPS->getSPSId());
- 
--      Window confWin = pPPS->getConformanceWindow( );
--      pcPicCurr->setPicWidthInLumaSamples( pPPS->getPicWidthInLumaSamples() );
--      pcPicCurr->setPicHeightInLumaSamples( pPPS->getPicHeightInLumaSamples() );
--      pcPicCurr->setConformanceWindow( confWin );
--
-       if( m_rprEnabled )
-       {
-         pcPicCurr->M_BUFS( 0, PIC_ORIGINAL_INPUT ).getBuf( COMPONENT_Y ).copyFrom( pcPicYuvOrg->getBuf( COMPONENT_Y ) );
-@@ -763,10 +753,6 @@ void EncLib::encode( bool flush, PelStorage* pcPicYuvOrg, PelStorage* pcPicYuvTr
-         int ppsID=-1; // Use default PPS ID
-         const PPS *pPPS=(ppsID<0) ? m_ppsMap.getFirstPS() : m_ppsMap.getPS(ppsID);
-         const SPS *pSPS=m_spsMap.getPS(pPPS->getSPSId());
--        Window confWin = pPPS->getConformanceWindow( );
--        pcField->setPicWidthInLumaSamples( pPPS->getPicWidthInLumaSamples() );
--        pcField->setPicHeightInLumaSamples( pPPS->getPicHeightInLumaSamples() );
--        pcField->setConformanceWindow( confWin );
- 
-         pcField->finalInit( *pSPS, *pPPS, m_apss, m_lmcsAPS, m_scalinglistAPS );
-       }
-diff --git a/source/Lib/EncoderLib/EncModeCtrl.cpp b/source/Lib/EncoderLib/EncModeCtrl.cpp
+diff --git a/Lib/EncoderLib/EncModeCtrl.cpp b/Lib/EncoderLib/EncModeCtrl.cpp
 index 56da31c..cc87786 100644
---- a/source/Lib/EncoderLib/EncModeCtrl.cpp
-+++ b/source/Lib/EncoderLib/EncModeCtrl.cpp
+--- a/Lib/EncoderLib/EncModeCtrl.cpp
++++ b/Lib/EncoderLib/EncModeCtrl.cpp
 @@ -1452,6 +1452,23 @@ bool EncModeCtrlMTnoRQT::tryMode( const EncTestMode& encTestmode, const CodingSt
      return false;
    }
@@ -2600,10 +2492,10 @@ index 56da31c..cc87786 100644
    const PartSplit implicitSplit = partitioner.getImplicitSplit( cs );
    const bool isBoundary         = implicitSplit != CU_DONT_SPLIT;
  
-diff --git a/source/Lib/EncoderLib/EncSlice.cpp b/source/Lib/EncoderLib/EncSlice.cpp
+diff --git a/Lib/EncoderLib/EncSlice.cpp b/Lib/EncoderLib/EncSlice.cpp
 index 7962096..3344551 100644
---- a/source/Lib/EncoderLib/EncSlice.cpp
-+++ b/source/Lib/EncoderLib/EncSlice.cpp
+--- a/Lib/EncoderLib/EncSlice.cpp
++++ b/Lib/EncoderLib/EncSlice.cpp
 @@ -113,6 +113,7 @@ EncSlice::setUpLambda( Slice* slice, const double dLambda, int iQP)
    // for RDO
    // in RdCost there is only one lambda because the luma and chroma bits are not separated, instead we weight the distortion of chroma.
@@ -2621,10 +2513,10 @@ index 7962096..3344551 100644
  #if ENABLE_WPP_PARALLELISM
      for( int jId = 1; jId < ( m_pcLib->getNumWppThreads() + m_pcLib->getNumWppExtraLines() ); jId++ )
      {
-diff --git a/source/Lib/EncoderLib/IntraSearch.cpp b/source/Lib/EncoderLib/IntraSearch.cpp
+diff --git a/Lib/EncoderLib/IntraSearch.cpp b/Lib/EncoderLib/IntraSearch.cpp
 index 1169828..547af92 100644
---- a/source/Lib/EncoderLib/IntraSearch.cpp
-+++ b/source/Lib/EncoderLib/IntraSearch.cpp
+--- a/Lib/EncoderLib/IntraSearch.cpp
++++ b/Lib/EncoderLib/IntraSearch.cpp
 @@ -1418,10 +1418,22 @@ void IntraSearch::estIntraPredChromaQT( CodingUnit &cu, Partitioner &partitioner
          {
            continue;
@@ -2835,5 +2727,5 @@ index 1169828..547af92 100644
      //----- get chroma residuals -----
      PelBuf resiCb  = cs.getResiBuf(cbArea);
 -- 
-2.33.0.windows.2
+2.26.2.windows.1
 

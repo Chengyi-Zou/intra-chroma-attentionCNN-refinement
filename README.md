@@ -43,7 +43,7 @@ archivePrefix = {arXiv},
 
 ### Dependencies
 
-The model is implemented in [Keras](https://github.com/fchollet/keras/tree/master/keras), which at its time is developed over [TensorFlow](https://www.tensorflow.org). Also, this code should be compatible with Python 3.6. And the reference code can be found [here](https://github.com/bbc/intra-chroma-attentionCNN).
+The model is implemented in [Keras](https://github.com/fchollet/keras/tree/master/keras), which at its time is developed over [TensorFlow](https://www.tensorflow.org). Also, this code should be compatible with Python 3.6. And the reference code can be found in [this repository](https://github.com/bbc/intra-chroma-attentionCNN).
 
 ### Prepare data
 
@@ -106,6 +106,10 @@ git apply ../VTM-7.0-schemes/scheme[X].patch
 ```
 
 To compile the generated VTM-7.0 version follow the official instructions in ```VVCSoftware_VTM/README.md```.
+
+### Reproduce the results
+
+All the schemes are evaluated against a constrained VTM-7.0 anchor, whereby the VVC partitioning process is limited to using only square blocks of 4, 8 and 16 pixels. In order to generate the constrained VTM-7.0 anchor in this paper, apply the patch difference located at ```VTM-7.0-schemes/square_anchor.patch```.
 
 ## Contact
 
