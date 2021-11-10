@@ -102,14 +102,20 @@ In order to generate a VTM-7.0 updated version with the proposed schemes, clone 
 ```
 git clone -b VTM-7.0 https://vcgit.hhi.fraunhofer.de/jvet/VVCSoftware_VTM.git
 cd VVCSoftware_VTM
-git apply ../VTM-7.0-schemes/scheme[X].patch
+cd source
+git apply ../../VTM-7.0-schemes/scheme[X].patch
 ```
 
 To compile the generated VTM-7.0 version follow the official instructions in ```VVCSoftware_VTM/README.md```.
 
 ### Reproduce the results
 
-All the schemes are evaluated against a constrained VTM-7.0 anchor, whereby the VVC partitioning process is limited to using only square blocks of 4, 8 and 16 pixels. In order to generate the constrained VTM-7.0 anchor in this paper, apply the patch difference located at ```VTM-7.0-schemes/square_anchor.patch```.
+All the schemes are evaluated against a constrained VTM-7.0 anchor, whereby the VVC partitioning process is limited to using only square blocks of 4, 8 and 16 pixels. In order to generate the constrained VTM-7.0 anchor in this paper, apply the patch difference located at ```VTM-7.0-schemes/square_anchor.patch```:
+
+```
+cd VVCSoftware_VTM
+git apply ../VTM-7.0-schemes/square_anchor.patch
+```
 
 ## Contact
 
